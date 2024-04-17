@@ -2,10 +2,18 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 import statsmodels.api as sm
+from dbfiller import DBManager
+from dbfiller import create_connection
 
 print("--------------------------------")
 print("Import packages successfull")
 print("--------------------------------")
+
+database = r"Database/Model_Results.sqlite"
+
+# create a database connection
+conn = create_connection(database)
+
 ##Multiple Linear Regression
 #Data preprocessing
 """ x = [
@@ -48,3 +56,5 @@ print(results.summary())
 print(f"coefficient of determination: {results.rsquared}")
 # print(f"predicted response:\n{results.fittedvalues}")
 # print(f"predicted response:\n{results.predict(x)}")
+dbManager = DBManager()
+dbManager.Insert(conn, results.rsquared)
