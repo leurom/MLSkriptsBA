@@ -2,31 +2,31 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 import statsmodels.api as sm
-from dbfiller import DBManager
-from dbfiller import create_connection
+#from dbfiller import DBManager
+#from dbfiller import create_connection
+from datareader import DataReader
 
 print("--------------------------------")
 print("Import packages successfull")
 print("--------------------------------")
 
-database = r"Database/Model_Results.sqlite"
+# database = r"Database/Model_Results.sqlite"
 
 # create a database connection
-conn = create_connection(database)
+# conn = create_connection(database)
 
 ##Multiple Linear Regression
 #Data preprocessing
-""" x = [
-   [0, 1], [5, 1], [15, 2], [25, 5], [35, 11], [45, 15], [55, 34], [60, 35]
-]
-y = [4, 5, 20, 14, 32, 22, 38, 43]
-x,y = np.array(x), np.array(y) """
-
-data = pd.read_csv('Advertising.csv')
+datareader = DataReader()
+data = datareader.readData()
+print(data)
+print(data.dtypes)
 # print(data.keys())
-drop = ['Unnamed: 0', 'sales', 'newspaper']
-y = data['sales']
+#drop = ['Unnamed: 0', 'sales', 'newspaper']
+drop = ['Datum / Zeit','Umstellung Verbr.']
+y = data['Umstellung Verbr.']
 x = data.drop(drop, axis=1)  # 'axis' sollte 1 sein, um Spalten zu löschen
+
 
 #Modeling
 baseModel = LinearRegression()
@@ -56,5 +56,6 @@ print(results.summary())
 print(f"coefficient of determination: {results.rsquared}")
 # print(f"predicted response:\n{results.fittedvalues}")
 # print(f"predicted response:\n{results.predict(x)}")
-dbManager = DBManager()
-dbManager.Insert(conn, results.rsquared)
+
+#dbManager = DBManager()
+#dbManager.Insert(conn, results.rsquared)
