@@ -27,7 +27,9 @@ drop = ['Datum / Zeit','Umstellung Verbr.']
 y = data['Umstellung Verbr.']
 x = data.drop(drop, axis=1)  # 'axis' sollte 1 sein, um Spalten zu löschen
 
-
+#datagenerator = datareader.generateDataSmote(x,y)
+#clusterData = datareader.clusterData()
+'''
 #Modeling
 baseModel = LinearRegression()
 baseModel.fit(x,y)
@@ -59,3 +61,4 @@ print(f"coefficient of determination: {results.rsquared}")
 
 #dbManager = DBManager()
 #dbManager.Insert(conn, results.rsquared)
+'''
