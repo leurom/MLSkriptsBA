@@ -4,7 +4,7 @@ from sklearn.linear_model import LinearRegression
 import statsmodels.api as sm
 #from dbfiller import DBManager
 #from dbfiller import create_connection
-from datareader import DataReader
+from datareader import DataManager
 
 print("--------------------------------")
 print("Import packages successfull")
@@ -17,7 +17,7 @@ print("--------------------------------")
 
 ##Multiple Linear Regression
 #Data preprocessing
-datareader = DataReader()
+datareader = DataManager()
 data = datareader.readData()
 print(data)
 print(data.dtypes)
@@ -27,8 +27,9 @@ drop = ['Datum / Zeit','Umstellung Verbr.']
 y = data['Umstellung Verbr.']
 x = data.drop(drop, axis=1)  # 'axis' sollte 1 sein, um Spalten zu löschen
 
-#datagenerator = datareader.generateDataSmote(x,y)
-#clusterData = datareader.clusterData()
+#moreData = datareader.generateDataSmote()
+
+clusterData = datareader.clusterData(data)
 '''
 #Modeling
 baseModel = LinearRegression()
