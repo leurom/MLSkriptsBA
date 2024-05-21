@@ -17,19 +17,17 @@ print("--------------------------------")
 
 ##Multiple Linear Regression
 #Data preprocessing
-datareader = DataManager()
-data = datareader.readData()
+dataManager = DataManager()
+data = dataManager.readData()
 print(data)
 print(data.dtypes)
 # print(data.keys())
-#drop = ['Unnamed: 0', 'sales', 'newspaper']
 drop = ['Datum / Zeit','Umstellung Verbr.']
-y = data['Umstellung Verbr.']
-x = data.drop(drop, axis=1)  # 'axis' sollte 1 sein, um Spalten zu löschen
-
-#moreData = datareader.generateDataSmote()
-
-clusterData = datareader.clusterData(data)
+#y = data['Umstellung Verbr.']
+#x = data.drop(drop, axis=1)  # 'axis' sollte 1 sein, um Spalten zu löschen
+#exploreData = dataManager.exploreData(data)
+#moreData = dataManager.generateDataSmote()
+clusterData = dataManager.clusterData(data)
 '''
 #Modeling
 baseModel = LinearRegression()
@@ -63,3 +61,8 @@ print(f"coefficient of determination: {results.rsquared}")
 #dbManager = DBManager()
 #dbManager.Insert(conn, results.rsquared)
 '''
+
+
+print("--------------------------------")
+print("End")
+print("--------------------------------")

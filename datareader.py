@@ -5,6 +5,8 @@ from sklearn.datasets import make_classification
 from imblearn.over_sampling import SMOTE
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.discriminant_analysis import StandardScaler
 
 class DataManager:
 
@@ -21,7 +23,8 @@ class DataManager:
 
         # Summe mit Spalte multiplizieren
         data["Verbrauch*Temp"] = data["Gesamtverbrauch"] * data[spalte_zum_multiplizieren]
-
+        drop = ['Datum / Zeit']
+        data = data.drop(drop, axis=1)
         #print(data)
         #print(data.keys())
         """ data["Umstellzeit"] = data["Umstellzeit"].astype(float)
@@ -33,6 +36,43 @@ class DataManager:
         data["Verriegelung Abw."] = data["Verriegelung Abw."].astype(float)
         data["Verriegelung Verbr."] = data["Verriegelung Verbr."].astype(float) """
         return data
+    
+    def exploreData(self, data):
+        # Laden des Iris-Datensatzes von Seaborn
+        #data = sns.load_dataset('iris')
+
+        # Anzeigen der ersten paar Zeilen des Datensatzes
+        print("Die ersten fünf Zeilen des Datensatzes:")
+        print(data.head())
+        print(data.info())
+        # Anzeigen der statistischen Zusammenfassung der Daten
+        print("\nStatistische Zusammenfassung des Datensatzes:")
+        print(data.describe())
+
+        # Visualisierung der Verteilung der Klassen
+        sns.countplot(x='Aussentemperatur', data=data)
+        plt.title('Verteilung der Klassen')
+        plt.show()
+
+        # Visualisierung der Verteilung der Merkmale
+        data.drop('Aussentemperatur', axis=1).hist(edgecolor='black', linewidth=1.2, figsize=(12, 8))
+        plt.suptitle("Verteilung der Merkmale")
+        plt.show()
+
+        # Paarplot für Merkmale mit Klassenfarben
+        """ sns.pairplot(data, hue='Aussentemperatur')
+        plt.title("Pairplot der Merkmale mit Klassenfarben")
+        plt.show() """
+
+        # Berechnung der Korrelationen
+        correlation_matrix = data.corr()
+
+        # Visualisierung der Korrelationen als Heatmap
+        plt.figure(figsize=(20, 15))
+        sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm')
+        plt.title('Korrelationsmatrix')
+        plt.show()
+
     
     def generateDataSmote(self):
         data = pd.read_excel("data/data1.xlsx")
@@ -91,8 +131,10 @@ class DataManager:
     def clusterData(self, df):
         #df = pd.read_excel("data/data1.xlsx")  
         print(df) 
+        #data = StandardScaler().fit_transform(df)
+        data = df
         drop = ['Datum / Zeit','Umstellzeit S','Entriegelung S', 'Umstellung S', 'Verriegelung S']
-        data = df.drop(drop,axis=1)
+        #data = df.drop(drop,axis=1)
         #data = df[['Aussentemperatur', 'Umstellung Verbr.', 'Umstellung Abw.']].copy()
         print(data)
         inertias = []
@@ -108,12 +150,12 @@ class DataManager:
         plt.xlabel('Number of clusters')
         plt.ylabel('Inertia')
         plt.show()
-
+        print(centroids)
         kmeans = KMeans(n_clusters=5)
         kmeans.fit(data)
         y_kmeans = kmeans.predict(data)
         cluster_zuordnungen = kmeans.labels_
-        plt.scatter(data['Aussentemperatur'], data['Umstellung Abw.'], c=cluster_zuordnungen)
+        plt.scatter(data['Umstellzeit'], data['Gesamtverbrauch'], c=cluster_zuordnungen)
         plt.show()
 
         """ centriods = kmeans.cluster_centers_
@@ -138,6 +180,8 @@ class DataManager:
         
 
         
+        
+
         
         
         
