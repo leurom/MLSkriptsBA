@@ -7,6 +7,11 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.discriminant_analysis import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn import metrics
+from sklearn.metrics import classification_report, accuracy_score
+from sklearn.neural_network import MLPClassifier
 
 class DataManager:
 
@@ -131,7 +136,8 @@ class DataManager:
     def clusterData(self, df):
         #df = pd.read_excel("data/data1.xlsx")  
         print(df) 
-        #data = StandardScaler().fit_transform(df)
+        scaler = StandardScaler()
+        #data = scaler.fit_transform(df)
         data = df[['Aussentemperatur', 'Gesamtverbrauch']]
         drop = ['Datum / Zeit','Umstellzeit S','Entriegelung S', 'Umstellung S', 'Verriegelung S']
         #data = df.drop(drop,axis=1)
@@ -160,17 +166,36 @@ class DataManager:
         plt.scatter(data['Aussentemperatur'], data['Gesamtverbrauch'], c=cluster_zuordnungen)
         plt.show()
         return labels, centroids
-        
-        
-        
+    
+
+    def logRegression(self, data):
+        y = data['Umstellung S']
+        x = data.drop(['Umstellung S'], axis=1)
+        X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=16)
+        logreg = LogisticRegression(random_state=16)
+        logreg.fit(X_train, y_train)
+        y_pred = logreg.predict(X_test)
+
+        cnf_matrix = metrics.confusion_matrix(y_test, y_pred)
+        cnf_matrix
+
+        target_names = ['1', '0']
+        print('Classification Report:')
+        print(classification_report(y_test, y_pred, target_names=target_names))
+
+    def neuralNetwork(self, data):
+        y = data['Umstellung S']
+        x = data.drop(['Umstellung S'], axis=1)
+        X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=16)
+        mlp = MLPClassifier(hidden_layer_sizes=(32, 16), activation='relu', solver='adam', max_iter=200, random_state=42)
+
+        mlp.fit(X_train, y_train)
+        y_pred = mlp.predict(X_test)
+        target_names = ['1', '0']
+        print('Classification Report:')
+        print(classification_report(y_test, y_pred, target_names=target_names))
+
 
         
         
-
         
-        
-        
-
-    
-    
-    

@@ -27,11 +27,15 @@ drop = ['Datum / Zeit','Umstellung Verbr.']
 #x = data.drop(drop, axis=1)  # 'axis' sollte 1 sein, um Spalten zu löschen
 #exploreData = dataManager.exploreData(data)
 #moreData = dataManager.generateDataSmote()
+
 labelcentroid = dataManager.clusterData(data)
 labels = labelcentroid[0]
 centroids = labelcentroid[1]
 print(labelcentroid[0])
 analyzeCluster = dataManager.analyzeCluster(labels, centroids, data)
+
+#logreg = dataManager.logRegression(data)
+#neuralnetwork = dataManager.neuralNetwork(data)
 '''
 #Modeling
 baseModel = LinearRegression()
