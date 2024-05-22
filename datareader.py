@@ -111,16 +111,16 @@ class DataManager:
 
     def analyzeCluster(self, labels, centroids, data ):
         # Daten mit Zuordnung der Clusterlabels erweitern
-        clustered_data = pd.DataFrame(data, columns=['X1', 'X2'])
+        clustered_data = pd.DataFrame(data, columns=['Aussentemperatur', 'Gesamtverbrauch'])
         clustered_data['Cluster'] = labels
+        data = data[['Aussentemperatur', 'Gesamtverbrauch']]
 
         # Charakteristika der Cluster untersuchen
         cluster_characteristics = clustered_data.groupby('Cluster').mean()
         print(cluster_characteristics)
-
         # Visualisierung der Cluster
         plt.figure(figsize=(8, 6))
-        plt.scatter(data[:, 0], data[:, 1], c=labels, cmap='viridis', s=50, alpha=0.5)
+        plt.scatter(data['Aussentemperatur'], data['Gesamtverbrauch'], c=labels, cmap='viridis', s=50, alpha=0.5)
         plt.scatter(centroids[:, 0], centroids[:, 1], c='red', marker='*', s=200, label='Centroids')
         plt.xlabel('X1')
         plt.ylabel('X2')
@@ -132,11 +132,10 @@ class DataManager:
         #df = pd.read_excel("data/data1.xlsx")  
         print(df) 
         #data = StandardScaler().fit_transform(df)
-        data = df
+        data = df[['Aussentemperatur', 'Gesamtverbrauch']]
         drop = ['Datum / Zeit','Umstellzeit S','Entriegelung S', 'Umstellung S', 'Verriegelung S']
         #data = df.drop(drop,axis=1)
         #data = df[['Aussentemperatur', 'Umstellung Verbr.', 'Umstellung Abw.']].copy()
-        print(data)
         inertias = []
 
         for i in range(1,11):
@@ -151,31 +150,17 @@ class DataManager:
         plt.ylabel('Inertia')
         plt.show()
         print(centroids)
-        kmeans = KMeans(n_clusters=5)
+        kmeans = KMeans(n_clusters=4)
         kmeans.fit(data)
+        inertias.append(kmeans.inertia_)
+        labels = kmeans.labels_
+        centroids = kmeans.cluster_centers_
         y_kmeans = kmeans.predict(data)
         cluster_zuordnungen = kmeans.labels_
-        plt.scatter(data['Umstellzeit'], data['Gesamtverbrauch'], c=cluster_zuordnungen)
+        plt.scatter(data['Aussentemperatur'], data['Gesamtverbrauch'], c=cluster_zuordnungen)
         plt.show()
-
-        """ centriods = kmeans.cluster_centers_
-        print(data)
-        plt.scatter(
-            x=data.iloc[:, 0],
-            y=data.iloc[:, 1],
-            c=inertias, 
-            s=50, 
-            cmap='Blues',
-            alpha = 0.5
-        )
-
-        plt.scatter(
-            centriods[:, 0], 
-            centriods[:, 1], 
-            c='black',
-            s=200,
-            alpha=0.55
-        ) """
+        return labels, centroids
+        
         
         
 
