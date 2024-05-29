@@ -11,11 +11,9 @@ print("Import packages successfull")
 print("--------------------------------")
 
 # database = r"Database/Model_Results.sqlite"
-
 # create a database connection
 # conn = create_connection(database)
 
-##Multiple Linear Regression
 #Data preprocessing
 dataManager = DataManager()
 data = dataManager.readData()
@@ -33,9 +31,10 @@ labels = labelcentroid[0]
 centroids = labelcentroid[1]
 print(labelcentroid[0])
 analyzeCluster = dataManager.analyzeCluster(labels, centroids, data)
+#rf = dataManager.randomForest(labelcentroid[2])
 
 #logreg = dataManager.logRegression(data)
-#neuralnetwork = dataManager.neuralNetwork(data)
+neuralnetwork = dataManager.neuralNetwork(labelcentroid[2])
 '''
 #Modeling
 baseModel = LinearRegression()

@@ -10,8 +10,12 @@ from sklearn.discriminant_analysis import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
-from sklearn.metrics import classification_report, accuracy_score
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 from sklearn.neural_network import MLPClassifier
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.utils import to_categorical
 
 class DataManager:
 
@@ -81,10 +85,6 @@ class DataManager:
     
     def generateDataSmote(self):
         data = pd.read_excel("data/data1.xlsx")
-        """ c1 = data["Datum / Zeit"]
-        smote = SMOTE(random_state=42)
-        c1_resampled = smote.fit_resample(c1.reshape(-1, 1), c1.reshape(-1, 1))
-        data["c1_resampled"] = c1_resampled.reshape(1, -1) """
 
         X = data.drop(columns=['Datum / Zeit'])  # Annahme: 'Label' ist die Spalte mit den Labels
         y = data['Datum / Zeit']
@@ -119,7 +119,9 @@ class DataManager:
         clustered_data = pd.DataFrame(data, columns=['Aussentemperatur', 'Gesamtverbrauch'])
         clustered_data['Cluster'] = labels
         data = data[['Aussentemperatur', 'Gesamtverbrauch']]
-
+        scaler = StandardScaler()
+        #data = scaler.fit_transform(data.to_numpy())
+        #data = pd.DataFrame(data, columns=['Aussentemperatur','Gesamtverbrauch'])
         # Charakteristika der Cluster untersuchen
         cluster_characteristics = clustered_data.groupby('Cluster').mean()
         print(cluster_characteristics)
@@ -136,41 +138,46 @@ class DataManager:
     def clusterData(self, df):
         #df = pd.read_excel("data/data1.xlsx")  
         print(df) 
+        drop = ['Umstellzeit S','Entriegelung S', 'Umstellung S', 'Verriegelung S']
+        data = df.drop(drop,axis=1)
+        #data = df[['Aussentemperatur', 'Gesamtverbrauch']]
         scaler = StandardScaler()
-        #data = scaler.fit_transform(df)
-        data = df[['Aussentemperatur', 'Gesamtverbrauch']]
-        drop = ['Datum / Zeit','Umstellzeit S','Entriegelung S', 'Umstellung S', 'Verriegelung S']
-        #data = df.drop(drop,axis=1)
-        #data = df[['Aussentemperatur', 'Umstellung Verbr.', 'Umstellung Abw.']].copy()
-        inertias = []
+        data = scaler.fit_transform(data.to_numpy())
+        data = pd.DataFrame(data)
+        #print(data)
+
+        sse = []
 
         for i in range(1,11):
             kmeans = KMeans(n_clusters=i)
             kmeans.fit(data)
-            inertias.append(kmeans.inertia_)
+            sse.append(kmeans.inertia_)
             labels = kmeans.labels_
             centroids = kmeans.cluster_centers_
-        plt.plot(range(1,11), inertias, marker='o')
+        plt.plot(range(1,11), sse, marker='o')
         plt.title('Elbow method')
         plt.xlabel('Number of clusters')
-        plt.ylabel('Inertia')
+        plt.ylabel('Summe der quadratischen Abweichungen (SSE)')
         plt.show()
         print(centroids)
-        kmeans = KMeans(n_clusters=4)
+        kmeans = KMeans(n_clusters=4, random_state=24)
         kmeans.fit(data)
-        inertias.append(kmeans.inertia_)
+        clusters = kmeans.fit_predict(data)
+        data['Cluster'] = clusters
+        print(data)
+        sse.append(kmeans.inertia_)
         labels = kmeans.labels_
         centroids = kmeans.cluster_centers_
-        y_kmeans = kmeans.predict(data)
+        #y_kmeans = kmeans.predict(data)
         cluster_zuordnungen = kmeans.labels_
-        plt.scatter(data['Aussentemperatur'], data['Gesamtverbrauch'], c=cluster_zuordnungen)
+        plt.scatter(data[8], data[11], c=cluster_zuordnungen)
         plt.show()
-        return labels, centroids
+        return labels, centroids, data
     
 
     def logRegression(self, data):
-        y = data['Umstellung S']
-        x = data.drop(['Umstellung S'], axis=1)
+        y = data['Cluster']
+        x = data.drop(['Cluster'], axis=1)
         X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=16)
         logreg = LogisticRegression(random_state=16)
         logreg.fit(X_train, y_train)
@@ -184,16 +191,78 @@ class DataManager:
         print(classification_report(y_test, y_pred, target_names=target_names))
 
     def neuralNetwork(self, data):
-        y = data['Umstellung S']
-        x = data.drop(['Umstellung S'], axis=1)
-        X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.25, random_state=16)
-        mlp = MLPClassifier(hidden_layer_sizes=(32, 16), activation='relu', solver='adam', max_iter=200, random_state=42)
+        # Features und Zielvariable definieren
+        print(data)
+        X = data.drop(['Cluster'], axis=1)  # Features
+        y = data['Cluster']  # Zielvariable (Cluster)
+        # Zielvariable in kategorisches Format umwandeln
+        y_categorical = to_categorical(y)
 
-        mlp.fit(X_train, y_train)
-        y_pred = mlp.predict(X_test)
-        target_names = ['1', '0']
-        print('Classification Report:')
-        print(classification_report(y_test, y_pred, target_names=target_names))
+        # Train-Test-Split
+        X_train, X_test, y_train, y_test = train_test_split(X, y_categorical, test_size=0.3, random_state=42)
+
+        # Daten skalieren
+        scaler = StandardScaler()
+        X_train_scaled = scaler.fit_transform(X_train)
+        X_test_scaled = scaler.transform(X_test)
+
+        # Modell erstellen
+        model = Sequential()
+        model.add(Dense(64, input_dim=X_train_scaled.shape[1], activation='relu'))
+        model.add(Dense(32, activation='relu'))
+        model.add(Dense(y_categorical.shape[1], activation='softmax'))
+
+        # Modell kompilieren
+        model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+        # Modell trainieren
+        history = model.fit(X_train_scaled, y_train, epochs=50, batch_size=32, validation_split=0.2, verbose=1)
+
+        # Modellbewertung auf dem Testdatensatz
+        y_pred_prob = model.predict(X_test_scaled)
+        y_pred = np.argmax(y_pred_prob, axis=1)
+        y_test_labels = np.argmax(y_test, axis=1)
+
+        # Genauigkeit
+        accuracy = np.mean(y_pred == y_test_labels)
+        print(f'Genauigkeit: {accuracy:.2f}')
+
+        # Detaillierter Bericht
+        print(classification_report(y_test_labels, y_pred))
+
+
+    def randomForest(self, data):
+        # Features und Zielvariable definieren
+        print(data)
+        X = data.drop(['Cluster'], axis=1)  # Features
+        y = data['Cluster']  # Zielvariable (Cluster)
+
+        # Train-Test-Split
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+        # Daten skalieren
+        scaler = StandardScaler()
+        X_train_scaled = scaler.fit_transform(X_train)
+        X_test_scaled = scaler.transform(X_test)
+
+        # Random Forest Classifier trainieren
+        rf = RandomForestClassifier(n_estimators=100, random_state=42)
+        rf.fit(X_train_scaled, y_train)
+
+        # Vorhersagen auf dem Testdatensatz
+        y_pred = rf.predict(X_test_scaled)
+
+        # Modellbewertung
+        accuracy = accuracy_score(y_test, y_pred)
+        print(f'Genauigkeit: {accuracy:.2f}')
+
+        # Detaillierter Bericht
+        print(classification_report(y_test, y_pred))
+
+        # Konfusionsmatrix
+        conf_matrix = confusion_matrix(y_test, y_pred)
+        print('Konfusionsmatrix:')
+        print(conf_matrix)
 
 
         
