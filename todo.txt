@@ -1,3 +1,0 @@
-Cluster centroids stimmen nicht
-
-Neural network predict score
